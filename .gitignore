@@ -1,0 +1,13 @@
+# Composer dependencies
+vendor/
+
+# Environment and local configs
+.env
+.env.local
+config/mail.php
+
+# Operating System Files
+Thumbs.db
+Desktop.ini
+.DS_Store
+
