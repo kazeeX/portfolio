@@ -5,9 +5,9 @@ vendor/
 .env
 .env.local
 config/mail.php
+config/database.php
 
 # Operating System Files
 Thumbs.db
 Desktop.ini
 .DS_Store
-
