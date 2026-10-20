@@ -12,6 +12,11 @@
  *
  * Database: portfolio_db (lokal) / sesuaikan untuk hosting
  * Driver:   pdo_pgsql
+ *
+ * Catatan perbaikan (2026-10-20): parameter DSN
+ * options='--client_encoding=UTF8' dihapus karena ditolak
+ * PostgreSQL di server hosting ("invalid command-line argument").
+ * Encoding UTF8 adalah default, jadi aman tanpa parameter itu.
  */
 
 // Database credentials with environment variable fallback
@@ -35,7 +40,7 @@ function getDatabaseConnection(?string &$errorMessage = null): ?PDO {
     }
 
     $dsn = sprintf(
-        'pgsql:host=%s;port=%s;dbname=%s;options=\\\'--client_encoding=UTF8\\\'',
+        'pgsql:host=%s;port=%s;dbname=%s',
         DB_HOST,
         DB_PORT,
         DB_NAME
