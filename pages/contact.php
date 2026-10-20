@@ -2,17 +2,15 @@
 /**
  * Contact Page View
  * Developer: Dhaffa Almuhar Dwi Setiawan
- * 
- * Interactive contact form with server-side PHP validation, PHPMailer Gmail SMTP, and feedback.
+ *
+ * Interactive contact form with server-side PHP validation.
+ * Messages are stored in the PostgreSQL database (contact_messages table)
+ * instead of being sent via SMTP email, so the form keeps working on free
+ * hosting plans (e.g. WebHostMost) where external SMTP is disabled.
  */
 
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\SMTP;
-use PHPMailer\PHPMailer\Exception;
-
-// Load Composer autoloader and mail configuration
-require_once dirname(__DIR__) . '/vendor/autoload.php';
-require_once dirname(__DIR__) . '/config/mail.php';
+// Load database configuration (exposes $pdo via getDatabaseConnection())
+require_once dirname(__DIR__) . '/config/database.php';
 
 $formSubmitted = false;
 $successMessage = null;
@@ -27,7 +25,7 @@ $message = '';
 // Process form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $formSubmitted = true;
-    
+
     // Sanitize and trim inputs
     $name    = isset($_POST['name']) ? trim(strip_tags($_POST['name'])) : '';
     $email   = isset($_POST['email']) ? trim(filter_var($_POST['email'], FILTER_SANITIZE_EMAIL)) : '';
@@ -44,88 +42,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (empty($message) || mb_strlen($message) < 10) {
         $errorMessage = 'Silakan tulis pesan minimal 10 karakter.';
     } else {
-        // Send email via PHPMailer using Gmail SMTP
-        $mail = new PHPMailer(true);
-
+        // Save message to database (no SMTP needed)
         try {
-            // SMTP Server Configuration
-            $mail->isSMTP();
-            $mail->Host       = SMTP_HOST;
-            $mail->SMTPAuth   = SMTP_AUTH;
-            $mail->Username   = SMTP_USER;
-            $mail->Password   = SMTP_PASS;
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port       = SMTP_PORT;
-            $mail->CharSet    = 'UTF-8';
+            if (!isset($pdo) || !($pdo instanceof PDO)) {
+                $dbErr = null;
+                $pdo = function_exists('getDatabaseConnection') ? getDatabaseConnection($dbErr) : null;
+            }
 
-            // Sender and Recipient Configuration
-            // Gmail requires the From address to match the authenticated account
-            $mail->setFrom(SMTP_USER, 'Portfolio - ' . $name);
-            $mail->addAddress(MAIL_TO_ADDRESS, MAIL_TO_NAME);
-            $mail->addReplyTo($email, $name);
+            if (!($pdo instanceof PDO)) {
+                throw new RuntimeException('Koneksi database tidak tersedia.');
+            }
 
-            // Email Content
-            $mail->isHTML(true);
-            $mail->Subject = '[Portfolio Contact] ' . $subject;
+            $stmt = $pdo->prepare(
+                'INSERT INTO contact_messages (name, email, subject, message) ' .
+                'VALUES (:name, :email, :subject, :message)'
+            );
+            $stmt->execute([
+                ':name'    => $name,
+                ':email'   => $email,
+                ':subject' => $subject,
+                ':message' => $message,
+            ]);
 
-            // HTML Body
-            $safeName    = htmlspecialchars($name, ENT_QUOTES, 'UTF-8');
-            $safeEmail   = htmlspecialchars($email, ENT_QUOTES, 'UTF-8');
-            $safeSubject = htmlspecialchars($subject, ENT_QUOTES, 'UTF-8');
-            $safeMessage = nl2br(htmlspecialchars($message, ENT_QUOTES, 'UTF-8'));
-
-            $mail->Body = "
-            <div style='font-family: Arial, sans-serif; line-height: 1.6; color: #1e293b; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; background-color: #ffffff;'>
-              <h2 style='color: #4f46e5; margin-top: 0; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; font-size: 20px;'>
-                Pesan Baru dari Formulir Kontak Portfolio
-              </h2>
-              <table style='width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px;'>
-                <tr>
-                  <td style='padding: 8px 0; width: 140px; color: #64748b; font-weight: bold;'>Nama Pengirim:</td>
-                  <td style='padding: 8px 0; color: #0f172a;'>{$safeName}</td>
-                </tr>
-                <tr>
-                  <td style='padding: 8px 0; color: #64748b; font-weight: bold;'>Email Pengirim:</td>
-                  <td style='padding: 8px 0;'><a href='mailto:{$safeEmail}' style='color: #4f46e5; text-decoration: none;'>{$safeEmail}</a></td>
-                </tr>
-                <tr>
-                  <td style='padding: 8px 0; color: #64748b; font-weight: bold;'>Subjek:</td>
-                  <td style='padding: 8px 0; color: #0f172a;'>{$safeSubject}</td>
-                </tr>
-              </table>
-              <div style='background-color: #f8fafc; border-left: 4px solid #4f46e5; border-radius: 6px; padding: 16px; margin-bottom: 20px;'>
-                <p style='margin: 0 0 8px 0; font-weight: bold; color: #475569; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;'>Isi Pesan:</p>
-                <div style='color: #1e293b; font-size: 15px;'>{$safeMessage}</div>
-              </div>
-              <p style='margin: 0; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 14px;'>
-                Email ini dikirimkan secara otomatis dari website portofolio Dhaffa Almuhar Dwi Setiawan. Anda dapat langsung membalas (Reply) email ini untuk menghubungi {$safeName}.
-              </p>
-            </div>
-            ";
-
-            // Plain text alternative
-            $mail->AltBody = "Pesan Baru dari Formulir Kontak Portfolio\n"
-                           . "========================================\n\n"
-                           . "Nama Pengirim: {$name}\n"
-                           . "Email Pengirim: {$email}\n"
-                           . "Subjek: {$subject}\n\n"
-                           . "Pesan:\n{$message}\n\n"
-                           . "---\nBalas email ini langsung untuk merespons {$name} ({$email}).\n";
-
-            $mail->send();
-
-            // Show existing success message
-            $successMessage = 'Terima kasih, ' . htmlspecialchars($name) . '! Pesan Anda telah diterima. Saya akan segera merespons email Anda.';
+            // Show success message
+            $successMessage = 'Terima kasih, ' . htmlspecialchars($name) . '! Pesan Anda telah diterima dan tersimpan. Saya akan membalas melalui email Anda secepatnya.';
 
             // Reset fields after successful submission
             $name = '';
             $email = '';
             $subject = '';
             $message = '';
-        } catch (Exception $e) {
-            // Log technical error details
-            error_log('PHPMailer Error: ' . $mail->ErrorInfo . ' | Exception: ' . $e->getMessage());
-            $errorMessage = 'Pesan gagal dikirim. Silakan coba lagi atau hubungi via email langsung.';
+        } catch (Throwable $e) {
+            // Log technical error details (never shown to visitors)
+            error_log('Contact form DB error: ' . $e->getMessage());
+            $errorMessage = 'Pesan gagal disimpan. Silakan coba lagi atau hubungi via email langsung.';
         }
     }
 }
@@ -296,13 +246,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <label for="contactName" class="form-label fw-semibold small">Nama Lengkap <span class="text-danger">*</span></label>
                 <div class="input-group">
                   <span class="input-group-text bg-light text-muted"><i class="bi bi-person"></i></span>
-                  <input 
-                    type="text" 
-                    class="form-control" 
-                    id="contactName" 
-                    name="name" 
-                    value="<?= htmlspecialchars($name) ?>" 
-                    placeholder="Nama Anda" 
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="contactName"
+                    name="name"
+                    value="<?= htmlspecialchars($name) ?>"
+                    placeholder="Nama Anda"
                     required
                   >
                   <div class="invalid-feedback">Silakan masukkan nama Anda.</div>
@@ -314,13 +264,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <label for="contactEmail" class="form-label fw-semibold small">Alamat Email <span class="text-danger">*</span></label>
                 <div class="input-group">
                   <span class="input-group-text bg-light text-muted"><i class="bi bi-envelope"></i></span>
-                  <input 
-                    type="email" 
-                    class="form-control" 
-                    id="contactEmail" 
-                    name="email" 
-                    value="<?= htmlspecialchars($email) ?>" 
-                    placeholder="nama@email.com" 
+                  <input
+                    type="email"
+                    class="form-control"
+                    id="contactEmail"
+                    name="email"
+                    value="<?= htmlspecialchars($email) ?>"
+                    placeholder="nama@email.com"
                     required
                   >
                   <div class="invalid-feedback">Silakan masukkan alamat email yang valid.</div>
@@ -332,13 +282,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <label for="contactSubject" class="form-label fw-semibold small">Subjek Pesan <span class="text-danger">*</span></label>
                 <div class="input-group">
                   <span class="input-group-text bg-light text-muted"><i class="bi bi-chat-left-dots"></i></span>
-                  <input 
-                    type="text" 
-                    class="form-control" 
-                    id="contactSubject" 
-                    name="subject" 
-                    value="<?= htmlspecialchars($subject) ?>" 
-                    placeholder="Diskusi Proyek / Pertanyaan / Saran" 
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="contactSubject"
+                    name="subject"
+                    value="<?= htmlspecialchars($subject) ?>"
+                    placeholder="Diskusi Proyek / Pertanyaan / Saran"
                     required
                   >
                   <div class="invalid-feedback">Silakan masukkan subjek pesan.</div>
@@ -348,12 +298,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               <!-- Message -->
               <div class="col-12">
                 <label for="contactMessage" class="form-label fw-semibold small">Isi Pesan <span class="text-danger">*</span></label>
-                <textarea 
-                  class="form-control" 
-                  id="contactMessage" 
-                  name="message" 
-                  rows="5" 
-                  placeholder="Tuliskan pesan, pertanyaan, atau tanggapan Anda di sini..." 
+                <textarea
+                  class="form-control"
+                  id="contactMessage"
+                  name="message"
+                  rows="5"
+                  placeholder="Tuliskan pesan, pertanyaan, atau tanggapan Anda di sini..."
                   required
                 ><?= htmlspecialchars($message) ?></textarea>
                 <div class="invalid-feedback">Silakan tulis pesan (minimal 10 karakter).</div>
