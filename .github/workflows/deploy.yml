@@ -1,0 +1,31 @@
+name: Deploy to WebHostMost
+
+# Otomatis upload ke hosting setiap ada push ke branch main.
+# File di server yang tidak ada di repo (terutama config/database.php
+# yang berisi kredensial asli) TIDAK disentuh dan TIDAK dihapus.
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy via SFTP
+        uses: wlixcc/SFTP-Deploy-Action@v1.2.6
+        with:
+          username: dvkgdjmt
+          server: server3.webhostmost.com
+          port: 2323
+          ssh_private_key: ${{ secrets.DEPLOY_SSH_KEY }}
+          local_path: './*'
+          remote_path: 'domains/paiport.my.id/public_html'
+          sftp_only: true
+          # Jaring pengaman: config/database.php tidak akan pernah
+          # ikut ter-upload walaupun suatu saat tidak sengaja ter-commit.
+          rsyncArgs: '--exclude=config/database.php'
