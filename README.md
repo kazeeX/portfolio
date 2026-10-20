@@ -2,6 +2,8 @@
 
 Website portofolio pribadi modern dan responsif yang dibangun menggunakan **Native PHP (tanpa framework)**, **Bootstrap 5 (via CDN)**, dan **PostgreSQL (via PDO)**.
 
+🌐 **Live**: [https://paiport.my.id](https://paiport.my.id)
+
 ---
 
 ## 👤 Informasi Pengembang
@@ -29,14 +31,15 @@ c:\laragon\www\portfolio\
 │   ├── js\
 │   │   └── main.js              # Client-side Bootstrap validation & tooltip
 │   └── img\
-│       ├── avatar.svg           # Placeholder foto profil
+│       ├── profile.jpg          # Foto profil
+│       ├── avatar.svg           # Favicon situs
 │       ├── project1.svg         # Aset gambar proyek (opsional)
 │       └── ...
 ├── config\
-│   ├── database.php             # Koneksi PDO PostgreSQL & penanganan error
-│   └── mail.php                 # Konfigurasi PHPMailer via Gmail SMTP
+│   ├── database.php             # Koneksi PDO PostgreSQL & penanganan error (tidak di-push, ada di .gitignore)
+│   └── database.example.php     # Template konfigurasi database (versi yang di-push ke repo)
 ├── database\
-│   └── database.sql             # Skema tabel PostgreSQL
+│   └── database.sql             # Skema tabel PostgreSQL (projects + contact_messages)
 ├── includes\
 │   ├── header.php               # HTML head, Bootstrap 5 CDN & navbar responsif
 │   └── footer.php               # Bootstrap 5 JS CDN & footer tautan sosial
@@ -44,35 +47,25 @@ c:\laragon\www\portfolio\
 │   ├── home.php                 # Halaman beranda (Hero, biodata, keahlian)
 │   ├── about.php                # Halaman tentang saya (Bio, keahlian, riwayat belajar)
 │   ├── projects.php             # Halaman proyek (Mengambil data PostgreSQL / empty-state)
-│   └── contact.php              # Halaman kontak (Formulir validasi, kirim email via SMTP)
-├── vendor\                      # Composer dependencies (PHPMailer)
-├── composer.json                # Dependensi proyek
-├── .gitignore                   # Ignore vendor & environment files
+│   └── contact.php              # Halaman kontak (Formulir validasi, pesan disimpan ke database)
+├── .gitignore                   # Ignore file konfigurasi berisi kredensial
 ├── index.php                    # Front controller / router whitelist
 └── README.md                    # Dokumentasi & panduan
 ```
 
 ---
 
-## 📧 Konfigurasi Email (PHPMailer via Gmail SMTP)
+## 📬 Formulir Kontak
 
-Pengiriman pesan formulir kontak menggunakan **PHPMailer** melalui **Gmail SMTP**.
+Pesan dari formulir kontak **disimpan ke database** PostgreSQL (tabel `contact_messages`), bukan dikirim sebagai email.
 
-### Konfigurasi SMTP di `config/mail.php`
+Alasannya: paket hosting gratis yang dipakai situs ini memblokir SMTP eksternal, jadi pengiriman email dari server tidak dapat dilakukan. Pesan yang masuk dibaca secara manual melalui pgAdmin / phpPgAdmin:
 
-| Parameter | Default | Keterangan |
-| :--- | :--- | :--- |
-| `SMTP_HOST` | `smtp.gmail.com` | Host server SMTP Gmail |
-| `SMTP_PORT` | `587` | Port SMTP (STARTTLS) |
-| `SMTP_SECURE`| `tls` | Enkripsi STARTTLS |
-| `SMTP_USER` | `dpaimuse@gmail.com` | Akun Gmail pengirim |
-| `SMTP_PASS` | `''` (kosong) | **16-karakter Gmail App Password** |
+```sql
+SELECT * FROM contact_messages ORDER BY created_at DESC;
+```
 
-> **Catatan Penting:** Untuk keamanan, gunakan **App Password** 16 karakter dari Google Account (bukan password akun biasa):
-> 1. Aktifkan **2-Step Verification** di akun Google Anda.
-> 2. Buka menu **Security** &rarr; **App passwords**.
-> 3. Buat App Password baru untuk "Mail / Portfolio".
-> 4. Set App Password tersebut melalui environment variable `SMTP_PASS` atau di `config/mail.php`. Jangan pernah mempublikasikan password asli ke public repository.
+Lalu dibalas secara manual melalui email pengirim yang tercantum di pesan.
 
 ---
 
@@ -87,10 +80,12 @@ Konfigurasi koneksi tersimpan di `config/database.php`:
 | `DB_PORT` | `5432` | Port PostgreSQL |
 | `DB_NAME` | `portfolio_db` | Nama database |
 | `DB_USER` | `postgres` | Username database |
-| `DB_PASS` | `postgres123` | Password database |
+| `DB_PASS` | *(diisi sendiri)* | Password database lokal — jangan pernah ditulis di repo |
+
+> **Keamanan:** `config/database.php` yang asli **tidak** ikut ter-push ke GitHub (terdaftar di `.gitignore`). Yang ada di repo hanya `config/database.example.php` sebagai template berisi placeholder.
 
 ### Menjalankan Skema Database
-Gunakan `psql` atau pgAdmin Query Tool:
+File `database/database.sql` membuat **kedua** tabel yang dibutuhkan aplikasi (`projects` dan `contact_messages`). Gunakan `psql` atau pgAdmin Query Tool:
 
 ```sql
 -- Buat database jika belum ada
@@ -112,6 +107,12 @@ DELETE FROM projects;
 
 Ketika tabel `projects` kosong, halaman Proyek akan menampilkan pesan ramah:
 > *"Proyek pertama saya sedang dalam pengerjaan. Kembali lagi nanti!"*
+
+---
+
+## 🚀 Deployment
+
+Setiap `push` ke branch `main` otomatis men-deploy situs ke hosting melalui **GitHub Actions** (upload SFTP ke server WebHostMost). File `config/database.php` dikecualikan dari deploy agar konfigurasi database di server tidak tertimpa versi lokal.
 
 ---
 
