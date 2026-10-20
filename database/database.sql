@@ -23,6 +23,23 @@ CREATE TABLE projects (
 );
 
 -- =========================================================
+-- Create the contact_messages table
+-- (dipakai form kontak sejak versi database -- tanpa ini,
+--  orang yang clone repo akan kena error
+--  relation contact_messages does not exist)
+-- Sengaja TANPA drop: tabel ini menampung pesan pengunjung,
+-- jangan sampai terhapus kalau schema dijalankan ulang.
+-- =========================================================
+CREATE TABLE IF NOT EXISTS contact_messages (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    subject VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =========================================================
 -- SQL to empty/clear the projects table:
 -- =========================================================
 -- DELETE FROM projects;
