@@ -72,17 +72,7 @@
       <!-- Hero Visual Avatar / Photo Placeholder -->
       <div class="col-lg-5 text-center">
         <div class="position-relative d-inline-block">
-          <img src="assets/img/avatar.svg" alt="Dhaffa Almuhar Dwi Setiawan" class="hero-avatar">
-          <!-- Floating School & Major Pill -->
-          <div class="position-absolute bottom-0 start-0 translate-middle-y bg-white p-3 rounded-4 shadow-lg border text-start d-none d-sm-flex align-items-center gap-3">
-            <div class="rounded-circle bg-primary-subtle text-primary p-2 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
-              <i class="bi bi-mortarboard-fill fs-4"></i>
-            </div>
-            <div>
-              <div class="fw-bold fs-6 text-dark">SMK Taruna Bangsa</div>
-              <div class="small text-muted">Rekayasa Perangkat Lunak</div>
-            </div>
-          </div>
+          <img src="assets/img/profile.jpg" alt="Dhaffa Almuhar Dwi Setiawan" class="hero-avatar">
         </div>
       </div>
     </div>
