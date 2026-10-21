@@ -3,6 +3,9 @@ name: Deploy to WebHostMost
 # Otomatis upload ke hosting setiap ada push ke branch main.
 # File di server yang tidak ada di repo (terutama config/database.php
 # yang berisi kredensial asli) TIDAK disentuh dan TIDAK dihapus.
+# Host, username, port, dan private key deploy semuanya dibaca dari
+# GitHub Secrets (Settings > Secrets and variables > Actions):
+# DEPLOY_HOST, DEPLOY_USERNAME, DEPLOY_PORT, DEPLOY_SSH_KEY.
 
 on:
   push:
@@ -19,9 +22,9 @@ jobs:
       - name: Deploy via SFTP
         uses: wlixcc/SFTP-Deploy-Action@v1.2.6
         with:
-          username: dvkgdjmt
-          server: server3.webhostmost.com
-          port: 2323
+          username: ${{ secrets.DEPLOY_USERNAME }}
+          server: ${{ secrets.DEPLOY_HOST }}
+          port: ${{ secrets.DEPLOY_PORT }}
           ssh_private_key: ${{ secrets.DEPLOY_SSH_KEY }}
           local_path: './*'
           remote_path: 'domains/paiport.my.id/public_html'
