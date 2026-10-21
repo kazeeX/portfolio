@@ -6,19 +6,7 @@
  */
 
 // Start session for flash messages (e.g. contact form submissions)
-// NOTE: the hosting's default PHP session storage does not persist data
-// between requests (verified 2026-10-21 — a value stored in the session
-// was gone on the very next request, which broke CSRF token checks), so
-// session files are stored in a private folder next to public_html.
-// Falls back to the default storage if that folder is not usable.
 if (session_status() === PHP_SESSION_NONE) {
-    $sessionDir = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'sessions';
-    if (!is_dir($sessionDir)) {
-        @mkdir($sessionDir, 0700, true);
-    }
-    if (is_dir($sessionDir) && is_writable($sessionDir)) {
-        session_save_path($sessionDir);
-    }
     session_start();
 }
 
