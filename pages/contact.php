@@ -4,6 +4,7 @@
  * Developer: Dhaffa Almuhar Dwi Setiawan
  *
  * Interactive contact form with server-side PHP validation.
+ * Protected by a per-session CSRF token and a honeypot anti-spam field.
  * Messages are stored in the PostgreSQL database (contact_messages table)
  * instead of being sent via SMTP email, so the form keeps working on free
  * hosting plans (e.g. WebHostMost) where external SMTP is disabled.
@@ -22,10 +23,31 @@ $email = '';
 $subject = '';
 $message = '';
 
+// CSRF token: random per-session value embedded in the form as a hidden
+// field and verified again on submit (the session is started in index.php).
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 // Process form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $formSubmitted = true;
 
+    // --- Anti-spam & CSRF guards (checked before anything is saved) ---
+    // Honeypot: the "website" field is invisible to human visitors, so only
+    // bots fill it in. If it has any value: fake a success, store nothing.
+    // CSRF: the hidden token in the form must match this session's token.
+    $guardPassed = true;
+    if (!empty($_POST['website'])) {
+        $successMessage = 'Terima kasih! Pesan Anda telah diterima dan tersimpan. Saya akan membalas melalui email Anda secepatnya.';
+        $guardPassed = false;
+    } elseif (!isset($_POST['csrf_token'], $_SESSION['csrf_token'])
+        || !hash_equals($_SESSION['csrf_token'], (string) $_POST['csrf_token'])) {
+        $errorMessage = 'Sesi formulir tidak valid atau sudah kedaluwarsa. Silakan muat ulang halaman ini, lalu coba kirim lagi.';
+        $guardPassed = false;
+    }
+
+    if ($guardPassed) {
     // Sanitize and trim inputs
     $name    = isset($_POST['name']) ? trim(strip_tags($_POST['name'])) : '';
     $email   = isset($_POST['email']) ? trim(filter_var($_POST['email'], FILTER_SANITIZE_EMAIL)) : '';
@@ -72,12 +94,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $email = '';
             $subject = '';
             $message = '';
+
+            // Rotate the CSRF token so the just-used one cannot be replayed
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         } catch (Throwable $e) {
             // Log technical error details (never shown to visitors)
             error_log('Contact form DB error: ' . $e->getMessage());
             $errorMessage = 'Pesan gagal disimpan. Silakan coba lagi atau hubungi via email langsung.';
         }
     }
+    } // end anti-spam & CSRF guard
 }
 ?>
 
@@ -240,6 +266,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <?php endif; ?>
 
           <form action="index.php?page=contact" method="POST" class="needs-validation" novalidate>
+            <!-- CSRF token (verified server-side when the form is submitted) -->
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+            <!-- Honeypot anti-spam: hidden from humans; bots that fill it are silently dropped -->
+            <div style="display:none" aria-hidden="true">
+              <label>Jangan isi kolom ini: <input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+            </div>
             <div class="row g-3">
               <!-- Name -->
               <div class="col-md-6">
