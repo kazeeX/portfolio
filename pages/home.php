@@ -152,23 +152,3 @@
   </div>
 </section>
 
-<!-- Call to Action Banner -->
-<section class="py-5 mb-5">
-  <div class="container">
-    <div class="bg-primary text-white rounded-4 p-4 p-md-5 text-center text-md-start position-relative overflow-hidden shadow-lg" style="background: linear-gradient(135deg, #4f46e5 0%, #1e1b4b 100%);">
-      <div class="row align-items-center gy-4">
-        <div class="col-md-8">
-          <h2 class="fw-bold mb-2 text-white">Ingin terhubung atau berdiskusi?</h2>
-          <p class="mb-0 text-white-50">
-            Jangan ragu untuk mengirimkan pesan, pertanyaan, atau saran melalui halaman kontak.
-          </p>
-        </div>
-        <div class="col-md-4 text-md-end">
-          <a href="index.php?page=contact" class="btn btn-light text-primary fw-bold px-4 py-2 rounded-3 shadow">
-            Hubungi Saya <i class="bi bi-arrow-right ms-1"></i>
-          </a>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>

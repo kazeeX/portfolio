@@ -1,15 +1,25 @@
   </main>
 
+  <?php if (($currentPage ?? '') !== 'contact'): ?>
+  <section class="cta-band">
+    <div class="container text-center">
+      <h2 class="cta-band-title">Punya proyek atau sekadar mau menyapa?</h2>
+      <p class="cta-band-text">Saya terbuka untuk kesempatan magang, kolaborasi, dan belajar bersama.</p>
+      <a href="index.php?page=contact" class="btn btn-primary-custom"><i class="bi bi-envelope-open me-2"></i> Hubungi Saya</a>
+    </div>
+  </section>
+  <?php endif; ?>
+
   <!-- Footer -->
   <footer class="footer-custom mt-auto">
     <div class="container">
       <div class="row align-items-center gy-3">
         <!-- Copyright & Brand -->
         <div class="col-md-6 text-center text-md-start">
-          <p class="mb-1 fw-bold text-dark">
+          <p class="mb-1 fw-bold text-white">
             <i class="bi bi-terminal-fill text-primary me-1"></i> <?= htmlspecialchars($siteName ?? 'Dhaffa') ?> &mdash; Dhaffa Almuhar Dwi Setiawan
           </p>
-          <p class="small mb-0 text-muted">
+          <p class="small mb-0 text-white-50">
             &copy; <?= date('Y') ?> Dhaffa Almuhar Dwi Setiawan. Pelajar RPL SMK Taruna Bangsa Kota Bekasi.
           </p>
         </div>
