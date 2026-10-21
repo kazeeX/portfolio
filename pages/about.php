@@ -200,7 +200,7 @@
             <!-- Timeline item 1 -->
             <div class="timeline-item">
               <div class="timeline-dot"></div>
-              <div class="badge bg-primary-subtle text-primary mb-1">2024 - Sekarang</div>
+              <div class="badge bg-primary-subtle text-primary mb-1">2026 - Sekarang</div>
               <h5 class="fw-bold mb-1">Kelas 12 &mdash; Rekayasa Perangkat Lunak</h5>
               <div class="text-muted small mb-2">SMK Taruna Bangsa, Kota Bekasi</div>
               <p class="text-muted small mb-0">
@@ -211,7 +211,7 @@
             <!-- Timeline item 2 -->
             <div class="timeline-item">
               <div class="timeline-dot"></div>
-              <div class="badge bg-primary-subtle text-primary mb-1">2023 - 2024</div>
+              <div class="badge bg-primary-subtle text-primary mb-1">2025 - 2026</div>
               <h5 class="fw-bold mb-1">Kelas 11 &mdash; Rekayasa Perangkat Lunak</h5>
               <div class="text-muted small mb-2">SMK Taruna Bangsa, Kota Bekasi</div>
               <p class="text-muted small mb-0">
@@ -222,7 +222,7 @@
             <!-- Timeline item 3 -->
             <div class="timeline-item">
               <div class="timeline-dot"></div>
-              <div class="badge bg-primary-subtle text-primary mb-1">2022 - 2023</div>
+              <div class="badge bg-primary-subtle text-primary mb-1">2024 - 2025</div>
               <h5 class="fw-bold mb-1">Kelas 10 &mdash; Pengenalan RPL &amp; Logika Pemrograman</h5>
               <div class="text-muted small mb-2">SMK Taruna Bangsa, Kota Bekasi</div>
               <p class="text-muted small mb-0">
